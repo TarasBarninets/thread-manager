@@ -21,13 +21,22 @@ class ThreadManager : public QObject
     Q_OBJECT
 public:
     ThreadManager(QObject *parent);
-	void startGeneralThreads(int generalThreadsCount);
+
+
+    // Start general and request threads
+    void startThreads(int generalThreadsCount, int requestThreadsCount); // start RequestedThread
+
+    // start general threads which create files one by one
+    void startGeneralThreads(int generalThreadsCount);
+
+    // start request hreads....
 	void startRequestedThreads(int requestedFileId);
 	void stopAllThreads();
 	void regenerateFiles(int generalThreadsCount);
 	void joinGeneralThreads();
 	void joinRequestedThreads();
 
+    void addRequest(int fileId); // notify
 private:
 	void fillFilesId();
 	void clearFilesId();
@@ -41,8 +50,8 @@ private:
 	void requestedFileCreation(int fileId);
 
 	std::vector<std::thread> mGeneralThreads;
-	std::vector <std::thread> mRequestedThreads;
-	std::vector<int> mFileIdToCreate;
+    std::vector<std::thread> mRequestedThreads;
+    std::vector<int> mFileIdToCreate; // add vector for requested + conditional variable
 	std::mutex mFileIdMutex;
 	std::atomic<bool> mStopThreads;
 	std::string mPath;

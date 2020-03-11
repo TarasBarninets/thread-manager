@@ -8,12 +8,15 @@ MainWindow::MainWindow(QWidget *parent)
     , mThreadManager(new ThreadManager(this))
 {
     ui->setupUi(this);
+    ui->stopButton->setEnabled(false);
+    ui->regenerateButton->setEnabled(false);
     fillGeneralThreadsCount();
     createComboBoxValues();
     createSpinBoxValues();
-    connect(ui->pushButton, &QPushButton::clicked, this, &MainWindow::startServer);
-    connect(ui->pushButton_2, &QPushButton::clicked, this, &MainWindow::stopServer);
-    connect(ui->pushButton_3, &QPushButton::clicked, this, &MainWindow::regenerateFiles);
+
+    connect(ui->startButton, &QPushButton::clicked, this, &MainWindow::startServer);
+    connect(ui->stopButton, &QPushButton::clicked, this, &MainWindow::stopServer);
+    connect(ui->regenerateButton, &QPushButton::clicked, this, &MainWindow::regenerateFiles);
 }
 
 MainWindow::~MainWindow()
@@ -49,23 +52,29 @@ void MainWindow::startServer()
     qDebug() << "generalThreadsCount = " << generalThreadsCount;
     mThreadManager->startGeneralThreads(generalThreadsCount);
 
-    ui->pushButton->setEnabled(false);
+    ui->startButton->setEnabled(false);
     ui->comboBox->setEnabled(false);
     ui->spinBox->setEnabled(false);
-    ui->pushButton_2->setEnabled(true);
+    ui->stopButton->setEnabled(true);
+    ui->regenerateButton->setEnabled(true);
 }
 
 void MainWindow::stopServer()
 {
     mThreadManager->stopAllThreads();
-    ui->pushButton->setEnabled(true);
+
+    ui->stopButton->setEnabled(false);
+    ui->startButton->setEnabled(true);
     ui->comboBox->setEnabled(true);
     ui->spinBox->setEnabled(true);
-    ui->pushButton_2->setEnabled(false);
 }
 
 void MainWindow::regenerateFiles()
 {
     int generalThreadsCount = ui->comboBox->currentText().toInt();
     mThreadManager->regenerateFiles(generalThreadsCount);
+
+    ui->regenerateButton->setEnabled(false);
+    ui->startButton->setEnabled(false);
+    ui->stopButton->setEnabled(true);
 }

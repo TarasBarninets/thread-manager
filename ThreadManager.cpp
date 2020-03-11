@@ -140,7 +140,7 @@ int ThreadManager::getFileIdToCreate()
 void ThreadManager::createFile(int fileId)
 {
 	std::ofstream outfile;
-	outfile.open(mPath + std::to_string(fileId) + ".txt", std::ios::app);
+    outfile.open(mPath + std::to_string(fileId) + ".txt");//, std::ios::app
 
 	int tmp = fileId;
 	while (tmp > 0)
