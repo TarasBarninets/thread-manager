@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -10,6 +9,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     ui->stopButton->setEnabled(false);
     ui->regenerateButton->setEnabled(false);
+    ui->requestButton->setEnabled(false);
     fillGeneralThreadsCount();
     createComboBoxValues();
     createSpinBoxValues();
@@ -17,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->startButton, &QPushButton::clicked, this, &MainWindow::startServer);
     connect(ui->stopButton, &QPushButton::clicked, this, &MainWindow::stopServer);
     connect(ui->regenerateButton, &QPushButton::clicked, this, &MainWindow::regenerateFiles);
+    connect(ui->requestButton, &QPushButton::clicked, this, &MainWindow::requestedFileId);
 }
 
 MainWindow::~MainWindow()
@@ -46,17 +47,30 @@ void MainWindow::createSpinBoxValues()
     ui->spinBox->setValue(1);
 }
 
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    if(!mThreadManager->threadsStopped())
+    {
+        mThreadManager->stopAllThreads();
+        event->accept();
+    }
+}
+
 void MainWindow::startServer()
 {
     int generalThreadsCount = ui->comboBox->currentText().toInt();
-    qDebug() << "generalThreadsCount = " << generalThreadsCount;
-    mThreadManager->startGeneralThreads(generalThreadsCount);
+    int requestedThreadsCount = ui->spinBox->value();
+    mThreadManager->startThreads(generalThreadsCount, requestedThreadsCount);
 
     ui->startButton->setEnabled(false);
+    ui->stopButton->setEnabled(true);
+    ui->regenerateButton->setEnabled(false);
+    ui->requestButton->setEnabled(true);
     ui->comboBox->setEnabled(false);
     ui->spinBox->setEnabled(false);
-    ui->stopButton->setEnabled(true);
-    ui->regenerateButton->setEnabled(true);
+
+    qDebug() << "Pushed button Start";
+    qDebug() << "generalThreadsCount = " << generalThreadsCount << " , requestedThreadsCount = " << requestedThreadsCount;
 }
 
 void MainWindow::stopServer()
@@ -65,16 +79,33 @@ void MainWindow::stopServer()
 
     ui->stopButton->setEnabled(false);
     ui->startButton->setEnabled(true);
+    ui->regenerateButton->setEnabled(true);
+    ui->requestButton->setEnabled(false);
     ui->comboBox->setEnabled(true);
     ui->spinBox->setEnabled(true);
+
+    qDebug() << "Pushed button Stop";
 }
 
 void MainWindow::regenerateFiles()
 {
     int generalThreadsCount = ui->comboBox->currentText().toInt();
-    mThreadManager->regenerateFiles(generalThreadsCount);
+    int requestedThreadsCount = ui->spinBox->value();
+    mThreadManager->regenerateFiles(generalThreadsCount, requestedThreadsCount);
 
     ui->regenerateButton->setEnabled(false);
     ui->startButton->setEnabled(false);
     ui->stopButton->setEnabled(true);
+    ui->requestButton->setEnabled(true);
+
+    qDebug() << "Pushed button Regenerate";
+}
+
+void MainWindow::requestedFileId()
+{
+    int requestedFileId = ui->lineEdit->text().toInt();
+    mThreadManager->addRequest(requestedFileId);
+
+    qDebug() << "Pushed button Request";
+    qDebug() << "requestedFileId = " << requestedFileId;
 }

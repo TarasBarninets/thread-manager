@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QDebug>
+#include <QCloseEvent>
 #include "ThreadManager.h"
 
 QT_BEGIN_NAMESPACE
@@ -19,6 +21,9 @@ public:
     void createComboBoxValues();
     void createSpinBoxValues();
 
+protected:
+    void closeEvent(QCloseEvent *event);
+
 signals:
     void generalThreadsCount(int threadsCount);
 
@@ -26,6 +31,7 @@ private slots:
     void startServer();
     void stopServer();
     void regenerateFiles();
+    void requestedFileId();
 
 private:
     Ui::MainWindow *ui;

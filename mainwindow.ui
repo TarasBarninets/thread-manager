@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>270</width>
-    <height>275</height>
+    <width>283</width>
+    <height>339</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -35,7 +35,24 @@
     <item>
      <widget class="QPushButton" name="regenerateButton">
       <property name="text">
-       <string>Regenerate files</string>
+       <string>Regenerate</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="requestButton">
+      <property name="text">
+       <string>Request ID</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="lineEdit">
+      <property name="inputMask">
+       <string/>
+      </property>
+      <property name="text">
+       <string/>
       </property>
      </widget>
     </item>
@@ -70,7 +87,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>270</width>
+     <width>283</width>
      <height>26</height>
     </rect>
    </property>
