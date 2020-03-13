@@ -2,7 +2,7 @@
 #include <iostream>
 
 std::mutex coutMutex;
-void printThreadSafe(const std::string& str)
+void printThreadSafe(const std::string& str) // thread safe function - to print logs
 {
 	std::lock_guard<std::mutex> lock(coutMutex);
 	std::cout << str << std::endl;
@@ -10,7 +10,7 @@ void printThreadSafe(const std::string& str)
 
 ThreadManager::ThreadManager(QObject *parent) : QObject(parent)
 {
-	fillFilesId();
+    fillGeneralFilesId();
 	createDestinationFolder();
 }
 
@@ -18,6 +18,7 @@ void ThreadManager::startThreads(int generalThreadsCount, int requestThreadsCoun
 {
     startGeneralThreads(generalThreadsCount);
     startRequestedThreads(requestThreadsCount);
+    printThreadSafe(__FUNCSIG__);
 }
 
 void ThreadManager::startGeneralThreads(int generalThreadsCount)
@@ -42,12 +43,16 @@ void ThreadManager::startRequestedThreads(int requestedThreadsCount)
 
 void ThreadManager::stopAllThreads()
 {
-	mStopThreads = true;
-    joinGeneralThreads();
-	mGeneralThreads.clear();
-    mRequestedQueueConditionVariable.notify_all();
-	joinRequestedThreads();
-	mRequestedThreads.clear();
+    if(!mStopThreads)
+    {
+        mStopThreads = true;
+        joinGeneralThreads();
+        mGeneralThreads.clear();
+        mRequestedQueueConditionVariable.notify_all();
+        joinRequestedThreads();
+        mRequestedThreads.clear();
+    }
+    printThreadSafe(__FUNCSIG__);
 }
 
 void ThreadManager::regenerateFiles(int generalThreadsCount, int requestThreadsCount)
@@ -55,14 +60,15 @@ void ThreadManager::regenerateFiles(int generalThreadsCount, int requestThreadsC
     if(mStopThreads)
     {
         stopAllThreads();
-        clearFilesId();
+        clearGeneralFilesId();
     }
 
 	removeCreatedFiles();
-	fillFilesId();
+    fillGeneralFilesId();
 	createDestinationFolder();
 	startGeneralThreads(generalThreadsCount);
     startRequestedThreads(requestThreadsCount);
+    printThreadSafe(__FUNCSIG__);
 }
 
 void ThreadManager::joinGeneralThreads()
@@ -95,31 +101,28 @@ void ThreadManager::joinRequestedThreads()
 	}
 }
 
-void ThreadManager::addRequest(int requestedFileId) // executed in Main thread
+void ThreadManager::createRequestedFile(int requestedFileId) // executed in Main thread
 {
     bool isNeeded = needFileCreation(requestedFileId);
     if(isNeeded)
     {
         mRequestedQueueConditionVariable.notify_one();
     }
+    printThreadSafe(__FUNCSIG__);
 }
 
-bool ThreadManager::threadsStopped()
+void ThreadManager::fillGeneralFilesId()
 {
-    return mStopThreads;
-}
-
-void ThreadManager::fillFilesId()
-{
-    mGeneralFileIdQueue.resize(mFilesCount);
-    std::iota(mGeneralFileIdQueue.begin(), mGeneralFileIdQueue.end(), 1);
+    mGeneralFile.resize(mFilesCount);
+    std::iota(mGeneralFile.begin(), mGeneralFile.end(), 1);
 	printThreadSafe(__FUNCSIG__);
 }
 
-void ThreadManager::clearFilesId()
+void ThreadManager::clearGeneralFilesId()
 {
-    std::lock_guard<std::mutex> lock(mGeneralFileIdMutex);
-    mGeneralFileIdQueue.clear();
+    std::lock_guard<std::mutex> lock(mGeneralFileMutex);
+    mGeneralFile.clear();
+    printThreadSafe(__FUNCSIG__);
 }
 
 void ThreadManager::createDestinationFolder()
@@ -131,10 +134,10 @@ void ThreadManager::createDestinationFolder()
 	printThreadSafe(__FUNCSIG__);
 }
 
-bool ThreadManager::emptyGeneralFileIdQueue()
+bool ThreadManager::emptyGeneralFile()
 {
-    std::lock_guard<std::mutex> lock(mGeneralFileIdMutex);
-    if(mGeneralFileIdQueue.empty())
+    std::lock_guard<std::mutex> lock(mGeneralFileMutex);
+    if(mGeneralFile.empty())
     {
         mStopThreads = true;
         mRequestedQueueConditionVariable.notify_all();
@@ -143,67 +146,49 @@ bool ThreadManager::emptyGeneralFileIdQueue()
     return false;
 }
 
-bool ThreadManager::emptyRequestedFileIdQueue()
-{
-    std::lock_guard<std::mutex> lock(mRequestedFileIdMutex);
-    return mRequestedFileIdQueue.empty();
-}
-
 bool ThreadManager::needFileCreation(int fileId)
 {
     {
-        std::lock_guard<std::mutex> lockGeneral(mGeneralFileIdMutex);
-        auto it = std::find(mGeneralFileIdQueue.begin(), mGeneralFileIdQueue.end(), fileId);
-        if (it == mGeneralFileIdQueue.end()) // check if file already created with this fileId
+        std::lock_guard<std::mutex> lockGeneral(mGeneralFileMutex);
+        auto it = std::find(mGeneralFile.begin(), mGeneralFile.end(), fileId);
+        if (it == mGeneralFile.end()) // check if file already created with this File ID
         {
             std::stringstream ss;
             ss << "Requested file already genereted" << std::endl;
             printThreadSafe(ss.str());
-
-            //std::lock_guard<std::mutex> lockRequested(mRequestedFileIdMutex);
-            //mRequestedFileIdQueue.pop_back(); // remove from requested queue - don't need create
-
             return false;
         }
         else
         {
-            mGeneralFileIdQueue.erase(it); // prevent creation in general thread
+            mGeneralFile.erase(it); // prevent creation in general thread
         }
     }
 
-    std::lock_guard<std::mutex> lockRequested(mRequestedFileIdMutex);
-    mRequestedFileIdQueue.push_back(fileId); // add fileId to requested queue
+    std::lock_guard<std::mutex> lockRequested(mRequestedFileMutex);
+    mRequestedFile.push_back(fileId); // add File ID to mRequestedFile vector
 	return true;
 }
 
-int ThreadManager::getGeneralFileIdToCreate()
+int ThreadManager::getGeneralFileId()
 {
-    std::lock_guard<std::mutex> lock(mGeneralFileIdMutex);
-    int fileId = mGeneralFileIdQueue.back();
-    mGeneralFileIdQueue.pop_back();
+    std::lock_guard<std::mutex> lock(mGeneralFileMutex);
+    int fileId = mGeneralFile.back();
+    mGeneralFile.pop_back();
 	return fileId;
-}
-
-int ThreadManager::getRequestedFileIdToCreate()
-{
-    std::lock_guard<std::mutex> lock(mRequestedFileIdMutex);
-    int fileId = mRequestedFileIdQueue.back();
-    mRequestedFileIdQueue.pop_back();
-    return fileId;
 }
 
 void ThreadManager::createFile(int fileId)
 {
 	std::ofstream outfile;
-    outfile.open(mPath + std::to_string(fileId) + ".txt");//, std::ios::app
+    outfile.open(mPath + std::to_string(fileId) + ".txt");
 
 	int tmp = fileId;
-	while (tmp > 0)
+    while (tmp > 0)
 	{
 		outfile << fileId << std::endl;
 		--tmp;
 	}
-    std::this_thread::sleep_for(std::chrono::milliseconds(10 * fileId)); // 100 * fileId - range [0.1, 10] sec
+    std::this_thread::sleep_for(std::chrono::milliseconds(100 * fileId)); // range [0.1; 10]
 	outfile.close();
 }
 
@@ -214,12 +199,16 @@ void ThreadManager::removeCreatedFiles()
 	printThreadSafe(__FUNCSIG__);
 }
 
-void ThreadManager::generalFileCreation() // General thread function
+void ThreadManager::generalFileCreation() // thread function for general thread
 {
-    bool empty = emptyGeneralFileIdQueue();
+    std::stringstream ss1;
+    ss1 << "General thread started Thread ID = " << std::this_thread::get_id();
+    printThreadSafe(ss1.str());
+
+    bool empty = emptyGeneralFile();
 	while (!empty && !mStopThreads)
 	{
-        int fileId = getGeneralFileIdToCreate();
+        int fileId = getGeneralFileId();
 		createFile(fileId);
 
 		std::stringstream ss;
@@ -227,7 +216,7 @@ void ThreadManager::generalFileCreation() // General thread function
 		<< " , spent seconds - " << ((100.0 * fileId) / 1000.0);
 		printThreadSafe(ss.str());
 
-        empty = emptyGeneralFileIdQueue();
+        empty = emptyGeneralFile();
 	}
 
 	std::stringstream ss;
@@ -235,20 +224,20 @@ void ThreadManager::generalFileCreation() // General thread function
 	printThreadSafe(ss.str());
 }
 
-void ThreadManager::requestedFileCreation() // Requested THREAD function
+void ThreadManager::requestedFileCreation() // thread function for requested thread
 {
     while(!mStopThreads)
     {   
-        std::unique_lock<std::mutex> lock(mRequestedFileIdMutex);
+        std::unique_lock<std::mutex> lock(mRequestedFileMutex);
         mRequestedQueueConditionVariable.wait(lock, [&]
         {
-            return !mRequestedFileIdQueue.empty() || mStopThreads;
+            return !mRequestedFile.empty() || mStopThreads;
         });
 
-        if(!mRequestedFileIdQueue.empty())
+        if(!mRequestedFile.empty())
         {
-            int requestedFileId = mRequestedFileIdQueue.back();
-            mRequestedFileIdQueue.pop_back();
+            int requestedFileId = mRequestedFile.back();
+            mRequestedFile.pop_back();
             createFile(requestedFileId);
 
             std::stringstream ss;

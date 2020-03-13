@@ -9,12 +9,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>283</width>
+    <width>325</width>
     <height>339</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Server</string>
+   <string>Thread Manager</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -54,12 +54,15 @@
       <property name="text">
        <string/>
       </property>
+      <property name="placeholderText">
+       <string>input requested File ID</string>
+      </property>
      </widget>
     </item>
     <item>
      <widget class="QLabel" name="label">
       <property name="text">
-       <string>General thread :</string>
+       <string>General threads :</string>
       </property>
      </widget>
     </item>
@@ -73,7 +76,7 @@
     <item>
      <widget class="QLabel" name="label_2">
       <property name="text">
-       <string>Requested thread :</string>
+       <string>Requested threads :</string>
       </property>
      </widget>
     </item>
@@ -82,17 +85,6 @@
     </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>283</width>
-     <height>26</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources/>
  <connections/>

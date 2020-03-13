@@ -49,11 +49,8 @@ void MainWindow::createSpinBoxValues()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    if(!mThreadManager->threadsStopped())
-    {
-        mThreadManager->stopAllThreads();
-        event->accept();
-    }
+    mThreadManager->stopAllThreads();
+    event->accept();
 }
 
 void MainWindow::startServer()
@@ -104,7 +101,7 @@ void MainWindow::regenerateFiles()
 void MainWindow::requestedFileId()
 {
     int requestedFileId = ui->lineEdit->text().toInt();
-    mThreadManager->addRequest(requestedFileId);
+    mThreadManager->createRequestedFile(requestedFileId);
 
     qDebug() << "Pushed button Request";
     qDebug() << "requestedFileId = " << requestedFileId;
