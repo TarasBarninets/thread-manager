@@ -5,6 +5,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , mThreadManager(new ThreadManager(this))
+    , mStopThreadsTimer(new QTimer(this))
 {
     ui->setupUi(this);
     ui->stopButton->setEnabled(false);
@@ -18,6 +19,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->stopButton, &QPushButton::clicked, this, &MainWindow::stopServer);
     connect(ui->regenerateButton, &QPushButton::clicked, this, &MainWindow::regenerateFiles);
     connect(ui->requestButton, &QPushButton::clicked, this, &MainWindow::requestedFileId);
+    connect(mStopThreadsTimer, &QTimer::timeout, this, &MainWindow::checkThreadsStops);
 }
 
 MainWindow::~MainWindow()
@@ -73,10 +75,9 @@ void MainWindow::startServer()
 void MainWindow::stopServer()
 {
     mThreadManager->stopAllThreads();
+    mStopThreadsTimer->start(500);
 
     ui->stopButton->setEnabled(false);
-    ui->startButton->setEnabled(true);
-    ui->regenerateButton->setEnabled(true);
     ui->requestButton->setEnabled(false);
     ui->comboBox->setEnabled(true);
     ui->spinBox->setEnabled(true);
@@ -106,3 +107,16 @@ void MainWindow::requestedFileId()
     qDebug() << "Pushed button Request";
     qDebug() << "requestedFileId = " << requestedFileId;
 }
+
+void MainWindow::checkThreadsStops()
+{
+    int numRunningThreads = mThreadManager->getNumRuningThreads();
+    if(numRunningThreads == 0)
+    {
+        ui->startButton->setEnabled(true);
+        ui->regenerateButton->setEnabled(true);
+        mStopThreadsTimer->stop();
+    }
+    qDebug() << "Timer trigered";
+}
+

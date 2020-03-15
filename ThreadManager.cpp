@@ -43,9 +43,13 @@ void ThreadManager::startRequestedThreads(int requestedThreadsCount)
 
 void ThreadManager::stopAllThreads()
 {
+
+    // MAIN THREAD
     if(!mStopThreads)
     {
+        //...
         mStopThreads = true;
+        // ... MAIN THREAD IS WAITING std::thread -
         joinGeneralThreads();
         mGeneralThreads.clear();
         mRequestedQueueConditionVariable.notify_all();
@@ -77,7 +81,7 @@ void ThreadManager::joinGeneralThreads()
 	{
 		if (thread.joinable())
 		{
-			thread.join();
+            thread.detach();
 
 			std::stringstream ss;
             ss << "Joined general thread ID - " << thread.get_id() << std::endl;
@@ -92,7 +96,7 @@ void ThreadManager::joinRequestedThreads()
 	{
 		if (thread.joinable())
 		{
-			thread.join();
+            thread.detach();
 
 			std::stringstream ss;
             ss << "Joined requested thread ID - " << thread.get_id();
@@ -109,6 +113,11 @@ void ThreadManager::createRequestedFile(int requestedFileId) // executed in Main
         mRequestedQueueConditionVariable.notify_one();
     }
     printThreadSafe(__FUNCSIG__);
+}
+
+int ThreadManager::getNumRuningThreads() const
+{
+    return mNumRunningThreads;
 }
 
 void ThreadManager::fillGeneralFilesId()
@@ -201,6 +210,8 @@ void ThreadManager::removeCreatedFiles()
 
 void ThreadManager::generalFileCreation() // thread function for general thread
 {
+    mNumRunningThreads++;
+
     std::stringstream ss1;
     ss1 << "General thread started Thread ID = " << std::this_thread::get_id();
     printThreadSafe(ss1.str());
@@ -222,10 +233,14 @@ void ThreadManager::generalFileCreation() // thread function for general thread
 	std::stringstream ss;
 	ss << "Finished general thread, Thread ID = " << std::this_thread::get_id();
 	printThreadSafe(ss.str());
+
+    mNumRunningThreads--;
 }
 
 void ThreadManager::requestedFileCreation() // thread function for requested thread
 {
+    mNumRunningThreads++;
+
     while(!mStopThreads)
     {   
         std::unique_lock<std::mutex> lock(mRequestedFileMutex);
@@ -249,4 +264,6 @@ void ThreadManager::requestedFileCreation() // thread function for requested thr
     std::stringstream ss;
     ss << "Finished requested thread, Thread ID = " << std::this_thread::get_id();
     printThreadSafe(ss.str());
+
+    mNumRunningThreads--;
 }

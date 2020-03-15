@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QDebug>
 #include <QCloseEvent>
+#include <QTimer>
 #include "ThreadManager.h"
 
 QT_BEGIN_NAMESPACE
@@ -32,10 +33,12 @@ private slots:
     void stopServer();
     void regenerateFiles();
     void requestedFileId();
+    void checkThreadsStops();
 
 private:
     Ui::MainWindow *ui;
     ThreadManager* mThreadManager;
+    QTimer *mStopThreadsTimer;
     QVector<int> mGeneralThreadsCount;
 };
 #endif // MAINWINDOW_H

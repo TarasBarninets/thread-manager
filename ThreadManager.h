@@ -30,6 +30,7 @@ public:
     void joinGeneralThreads();                                              // join general threads
     void joinRequestedThreads();                                            // join requested threads
     void createRequestedFile(int requestedFileId);                          // created requested File ID
+    int getNumRuningThreads() const;                                        // return count of runing threads
 
 private:
     void fillGeneralFilesId();                                              // fill vector mGeneralFile - Files ID
@@ -37,7 +38,7 @@ private:
     void createDestinationFolder();                                         // create folder GeneretedTxtFiles - where
     bool emptyGeneralFile();                                                // return empty of mGeneralFile
     bool needFileCreation(int fileId);                                      // return true if file not created in general thread
-    int getGeneralFileId();                                                 // return File ID from mGeneralFile
+    int getGeneralFileId();  //fetch                                          // return File ID from mGeneralFile
     void createFile(int fileId);                                            // create txt file
     void removeCreatedFiles();                                              // remove all created files
 
@@ -51,6 +52,7 @@ private:
     std::mutex mGeneralFileMutex;                                           // mutex for synchronize access to mGeneralFile
     std::mutex mRequestedFileMutex;                                         // mutex for synchronize access to mRequestedFile
     std::atomic<bool> mStopThreads;                                         // atomic variable that signals threads to finish execution
+    std::atomic<int> mNumRunningThreads;                                    // atomic variable - contain a number of running threads
     std::condition_variable mRequestedQueueConditionVariable;               // conditional variable - notify thread from pool to create requested file
     std::string mPath;                                                      // path where created files
     const size_t mFilesCount = 100;                                         // quantity of files that should be created
