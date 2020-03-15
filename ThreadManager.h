@@ -29,6 +29,8 @@ public:
     void regenerateFiles(int generalThreadsCount, int requestThreadsCount); // remove all files and creates new one
     void joinGeneralThreads();                                              // join general threads
     void joinRequestedThreads();                                            // join requested threads
+    void detachGeneralThreads();                                            // detach general threads
+    void detachRequestedThreads();                                          // detach requested threads
     void createRequestedFile(int requestedFileId);                          // created requested File ID
     int getNumRuningThreads() const;                                        // return count of runing threads
 

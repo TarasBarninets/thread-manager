@@ -43,17 +43,13 @@ void ThreadManager::startRequestedThreads(int requestedThreadsCount)
 
 void ThreadManager::stopAllThreads()
 {
-
-    // MAIN THREAD
     if(!mStopThreads)
     {
-        //...
         mStopThreads = true;
-        // ... MAIN THREAD IS WAITING std::thread -
-        joinGeneralThreads();
+        detachGeneralThreads();
         mGeneralThreads.clear();
         mRequestedQueueConditionVariable.notify_all();
-        joinRequestedThreads();
+        detachRequestedThreads();
         mRequestedThreads.clear();
     }
     printThreadSafe(__FUNCSIG__);
@@ -77,6 +73,36 @@ void ThreadManager::regenerateFiles(int generalThreadsCount, int requestThreadsC
 
 void ThreadManager::joinGeneralThreads()
 {
+    for (std::thread& thread : mGeneralThreads)
+    {
+        if (thread.joinable())
+        {
+            thread.join();
+
+            std::stringstream ss;
+            ss << "Joined general thread ID - " << thread.get_id() << std::endl;
+            printThreadSafe(ss.str());
+        }
+    }
+}
+
+void ThreadManager::joinRequestedThreads()
+{
+    for (std::thread& thread : mRequestedThreads)
+    {
+        if (thread.joinable())
+        {
+            thread.join();
+
+            std::stringstream ss;
+            ss << "Joined requested thread ID - " << thread.get_id();
+            printThreadSafe(ss.str());
+        }
+    }
+}
+
+void ThreadManager::detachGeneralThreads()
+{
 	for (std::thread& thread : mGeneralThreads)
 	{
 		if (thread.joinable())
@@ -84,13 +110,13 @@ void ThreadManager::joinGeneralThreads()
             thread.detach();
 
 			std::stringstream ss;
-            ss << "Joined general thread ID - " << thread.get_id() << std::endl;
+            ss << "Detached general thread ID - " << thread.get_id() << std::endl;
 			printThreadSafe(ss.str());
 		}
 	}
 }
 
-void ThreadManager::joinRequestedThreads()
+void ThreadManager::detachRequestedThreads()
 {
 	for (std::thread& thread : mRequestedThreads)
 	{
@@ -99,7 +125,7 @@ void ThreadManager::joinRequestedThreads()
             thread.detach();
 
 			std::stringstream ss;
-            ss << "Joined requested thread ID - " << thread.get_id();
+            ss << "Detached requested thread ID - " << thread.get_id();
 			printThreadSafe(ss.str());
 		}
 	}
@@ -203,7 +229,8 @@ void ThreadManager::createFile(int fileId)
 
 void ThreadManager::removeCreatedFiles()
 {
-	joinGeneralThreads(); // wait when all threads finished
+    joinGeneralThreads(); // wait when all general threads finished
+    joinRequestedThreads(); // wait when all requested threads finished
 	std::filesystem::remove_all(mPath);
 	printThreadSafe(__FUNCSIG__);
 }
