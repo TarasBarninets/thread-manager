@@ -13,6 +13,7 @@
 #include <sstream>
 #include <filesystem>
 #include <QObject>
+#include <QTime>
 
 extern std::mutex coutMutex;
 void printThreadSafe(const std::string& str);
@@ -31,8 +32,13 @@ public:
     void joinRequestedThreads();                                            // join requested threads
     void detachGeneralThreads();                                            // detach general threads
     void detachRequestedThreads();                                          // detach requested threads
-    void createRequestedFile(int requestedFileId);                          // created requested File ID
     int getNumRuningThreads() const;                                        // return count of runing threads
+
+signals:
+    void fileCreated(int fileId, QTime time, QString path);
+
+public slots:
+     void createRequestedFile(int requestedFileId);                         // created requested File
 
 private:
     void fillGeneralFilesId();                                              // fill vector mGeneralFile - Files ID
@@ -40,7 +46,7 @@ private:
     void createDestinationFolder();                                         // create folder GeneretedTxtFiles - where
     bool emptyGeneralFile();                                                // return empty of mGeneralFile
     bool needFileCreation(int fileId);                                      // return true if file not created in general thread
-    int getGeneralFileId();  //fetch                                          // return File ID from mGeneralFile
+    int fetchGeneralFileId();                                               // return File ID that should be generated and remove from mGeneralFile
     void createFile(int fileId);                                            // create txt file
     void removeCreatedFiles();                                              // remove all created files
 

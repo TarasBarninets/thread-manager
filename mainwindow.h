@@ -6,6 +6,7 @@
 #include <QCloseEvent>
 #include <QTimer>
 #include "ThreadManager.h"
+#include "TcpServer.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -32,12 +33,13 @@ private slots:
     void startServer();
     void stopServer();
     void regenerateFiles();
-    void requestedFileId();
     void checkThreadsStops();
+    void handleCreatedFile(int fileId, QTime time, QString path);
 
 private:
     Ui::MainWindow *ui;
     ThreadManager* mThreadManager;
+    TcpServer* mTcpServer;
     QTimer *mStopThreadsTimer;
     QVector<int> mGeneralThreadsCount;
 };

@@ -1,5 +1,6 @@
 #include "ThreadManager.h"
 #include <iostream>
+#include <QString>
 
 std::mutex coutMutex;
 void printThreadSafe(const std::string& str) // thread safe function - to print logs
@@ -204,7 +205,7 @@ bool ThreadManager::needFileCreation(int fileId)
 	return true;
 }
 
-int ThreadManager::getGeneralFileId()
+int ThreadManager::fetchGeneralFileId()
 {
     std::lock_guard<std::mutex> lock(mGeneralFileMutex);
     int fileId = mGeneralFile.back();
@@ -215,7 +216,8 @@ int ThreadManager::getGeneralFileId()
 void ThreadManager::createFile(int fileId)
 {
 	std::ofstream outfile;
-    outfile.open(mPath + std::to_string(fileId) + ".txt");
+    std::string path = mPath + std::to_string(fileId) + ".txt";
+    outfile.open(path);
 
 	int tmp = fileId;
     while (tmp > 0)
@@ -225,6 +227,8 @@ void ThreadManager::createFile(int fileId)
 	}
     std::this_thread::sleep_for(std::chrono::milliseconds(100 * fileId)); // range [0.1; 10]
 	outfile.close();
+
+    emit fileCreated(fileId,QTime::currentTime(), QString::fromStdString(path));
 }
 
 void ThreadManager::removeCreatedFiles()
@@ -246,7 +250,7 @@ void ThreadManager::generalFileCreation() // thread function for general thread
     bool empty = emptyGeneralFile();
 	while (!empty && !mStopThreads)
 	{
-        int fileId = getGeneralFileId();
+        int fileId = fetchGeneralFileId();
 		createFile(fileId);
 
 		std::stringstream ss;
