@@ -11,6 +11,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     ui->stopButton->setEnabled(false);
     ui->regenerateButton->setEnabled(false);
+
+    QString windowTitle("Thread Manager Server");
+    this->setWindowTitle(windowTitle);
+
     fillGeneralThreadsCount();
     createComboBoxValues();
     createSpinBoxValues();
@@ -20,8 +24,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->regenerateButton, &QPushButton::clicked, this, &MainWindow::regenerateFiles);
     connect(mStopThreadsTimer, &QTimer::timeout, this, &MainWindow::checkThreadsStops);
     connect(mTcpServer, &TcpServer::requestFile, mThreadManager, &ThreadManager::createRequestedFile);
-    connect(mThreadManager, &ThreadManager::fileCreated, this, &MainWindow::handleCreatedFile);
-    connect(mTcpServer, &TcpServer::requestHistoryMessage, ui->requestHistory, &QTextEdit::append);
+    connect(mThreadManager, &ThreadManager::fileCreated, this, &MainWindow::handleRequestedCreatedFile);
+    connect(mThreadManager, &ThreadManager::pathAlreadyCreatedFile, this, &MainWindow::handleAlreadyCreatedFile);
+    connect(mTcpServer, &TcpServer::requestFromClient, ui->requestHistory, &QTextEdit::append);
 }
 
 MainWindow::~MainWindow()
@@ -107,13 +112,18 @@ void MainWindow::checkThreadsStops()
         ui->regenerateButton->setEnabled(true);
         mStopThreadsTimer->stop();
     }
-    qDebug() << "Timer trigered";
+    qDebug() << "Timer trigered, numRunningThreads = " << numRunningThreads;
 }
 
-void MainWindow::handleCreatedFile(int fileId, QTime time, QString path)
+void MainWindow::handleRequestedCreatedFile(int fileId, QDateTime time, QString path)
 {
     QString message = time.toString() + " : " + path;
     ui->generatedFilesHistory->append(message);
+    mTcpServer->informClient(fileId, path);
+}
+
+void MainWindow::handleAlreadyCreatedFile(int fileId, QString path)
+{
     mTcpServer->informClient(fileId, path);
 }
 

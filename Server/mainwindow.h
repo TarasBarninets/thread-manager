@@ -34,7 +34,8 @@ private slots:
     void stopServer();
     void regenerateFiles();
     void checkThreadsStops();
-    void handleCreatedFile(int fileId, QTime time, QString path);
+    void handleRequestedCreatedFile(int fileId, QDateTime time, QString path);
+    void handleAlreadyCreatedFile(int fileId, QString path);
 
 private:
     Ui::MainWindow *ui;

@@ -18,7 +18,7 @@ public:
 
 signals:
     void requestFile(int fileId);
-    void requestHistoryMessage(QString message);
+    void requestFromClient(QString message);
 
 private slots:
     void clientConnect();

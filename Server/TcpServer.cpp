@@ -28,6 +28,8 @@ void TcpServer::informClient(int fileId, QString path)
 void TcpServer::clientConnect()
 {
     QTcpSocket* clientSocket = mTcpServer->nextPendingConnection();
+    emit requestFromClient("Client connected!");
+
     clientSocket->write("Connected to server!");
     connect(clientSocket, &QTcpSocket::readyRead, this, &TcpServer::acceptRequest);
     connect(clientSocket, &QTcpSocket::disconnected, this, &TcpServer::clientDisconect);
@@ -44,25 +46,23 @@ void TcpServer::acceptRequest()
     const QString firstWord = "request";
     const QString secondWord = "file";
     QString isNewLineSymbols;
-    int id;
 
     if(buffer.size() > 14)
     {
-        isNewLineSymbols = buffer.right(2);
+        isNewLineSymbols = buffer.right(1);
     }
 
-    if(isNewLineSymbols == "\r\n")
+    if(isNewLineSymbols == ";")
     {
-        qDebug() << "Found new line - \r\n in mClientBuferrData";
+        qDebug() << "Found new line - ; in mClientBuferrData";
         QTime time = QTime::currentTime();
         QString historyMessage = time.toString() + " Client has sent - " + buffer;
         qDebug() << historyMessage;
-        emit requestHistoryMessage(historyMessage);
+        emit requestFromClient(historyMessage);
 
         QStringList splittedRequest = buffer.split(" ");
         QString thirdPart = splittedRequest.at(2);
-        QStringList fileId = thirdPart.split("\\");
-        id = fileId.at(0).toInt();
+        int id = thirdPart.left(thirdPart.length()-1).toInt();
 
         qDebug() << "first - " << splittedRequest.at(0);
         qDebug() << "second - " << splittedRequest.at(1);

@@ -71,7 +71,11 @@
      </widget>
     </item>
     <item>
-     <widget class="QTextEdit" name="generatedFilesHistory"/>
+     <widget class="QTextEdit" name="generatedFilesHistory">
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="QLabel" name="label_3">
@@ -87,6 +91,9 @@
       </property>
       <property name="lineWidth">
        <number>1</number>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
       </property>
      </widget>
     </item>

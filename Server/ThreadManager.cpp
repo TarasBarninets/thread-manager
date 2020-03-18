@@ -1,6 +1,8 @@
 #include "ThreadManager.h"
 #include <iostream>
 #include <QString>
+#include <QFile>
+#include <QFileInfo>
 
 std::mutex coutMutex;
 void printThreadSafe(const std::string& str) // thread safe function - to print logs
@@ -192,6 +194,9 @@ bool ThreadManager::needFileCreation(int fileId)
             std::stringstream ss;
             ss << "Requested file already genereted" << std::endl;
             printThreadSafe(ss.str());
+
+            std::string path = mPath + std::to_string(fileId) + ".txt";
+            emit pathAlreadyCreatedFile(fileId, QString::fromStdString(path));
             return false;
         }
         else
@@ -215,20 +220,20 @@ int ThreadManager::fetchGeneralFileId()
 
 void ThreadManager::createFile(int fileId)
 {
-	std::ofstream outfile;
     std::string path = mPath + std::to_string(fileId) + ".txt";
-    outfile.open(path);
+    QFile file(path.c_str());
+    file.open(QFile::ReadWrite);
 
 	int tmp = fileId;
     while (tmp > 0)
 	{
-		outfile << fileId << std::endl;
-		--tmp;
+        file.write(QString(fileId).toStdString().c_str());
+        --tmp;
 	}
     std::this_thread::sleep_for(std::chrono::milliseconds(100 * fileId)); // range [0.1; 10]
-	outfile.close();
+    file.close();
 
-    emit fileCreated(fileId,QTime::currentTime(), QString::fromStdString(path));
+    emit fileCreated(fileId, QFileInfo(path.c_str()).created(), QString::fromStdString(path));
 }
 
 void ThreadManager::removeCreatedFiles()

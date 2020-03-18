@@ -35,7 +35,8 @@ public:
     int getNumRuningThreads() const;                                        // return count of runing threads
 
 signals:
-    void fileCreated(int fileId, QTime time, QString path);
+    void fileCreated(int fileId, QDateTime time, QString path);
+    void pathAlreadyCreatedFile(int fileId, QString path);
 
 public slots:
      void createRequestedFile(int requestedFileId);                         // created requested File
@@ -60,7 +61,7 @@ private:
     std::mutex mGeneralFileMutex;                                           // mutex for synchronize access to mGeneralFile
     std::mutex mRequestedFileMutex;                                         // mutex for synchronize access to mRequestedFile
     std::atomic<bool> mStopThreads;                                         // atomic variable that signals threads to finish execution
-    std::atomic<int> mNumRunningThreads;                                    // atomic variable - contain a number of running threads
+    std::atomic<int> mNumRunningThreads = 0;                                // atomic variable - contain a number of running threads
     std::condition_variable mRequestedQueueConditionVariable;               // conditional variable - notify thread from pool to create requested file
     std::string mPath;                                                      // path where created files
     const size_t mFilesCount = 100;                                         // quantity of files that should be created
