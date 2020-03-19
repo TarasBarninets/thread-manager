@@ -13,7 +13,7 @@
 #include <sstream>
 #include <filesystem>
 #include <QObject>
-#include <QTime>
+#include <QDateTime>
 
 extern std::mutex coutMutex;
 void printThreadSafe(const std::string& str);
@@ -35,8 +35,7 @@ public:
     int getNumRuningThreads() const;                                        // return count of runing threads
 
 signals:
-    void fileCreated(int fileId, QDateTime time, QString path);
-    void pathAlreadyCreatedFile(int fileId, QString path);
+    void fileCreated(int fileId, QString path, QDateTime dateTime = QDateTime::fromString("1.30.1", "M.d.s"));
 
 public slots:
      void createRequestedFile(int requestedFileId);                         // created requested File

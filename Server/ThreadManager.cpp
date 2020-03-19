@@ -3,6 +3,7 @@
 #include <QString>
 #include <QFile>
 #include <QFileInfo>
+#include <QDateTime>
 
 std::mutex coutMutex;
 void printThreadSafe(const std::string& str) // thread safe function - to print logs
@@ -196,7 +197,7 @@ bool ThreadManager::needFileCreation(int fileId)
             printThreadSafe(ss.str());
 
             std::string path = mPath + std::to_string(fileId) + ".txt";
-            emit pathAlreadyCreatedFile(fileId, QString::fromStdString(path));
+            emit fileCreated(fileId, QString::fromStdString(path));
             return false;
         }
         else
@@ -233,7 +234,7 @@ void ThreadManager::createFile(int fileId)
     std::this_thread::sleep_for(std::chrono::milliseconds(100 * fileId)); // range [0.1; 10]
     file.close();
 
-    emit fileCreated(fileId, QFileInfo(path.c_str()).created(), QString::fromStdString(path));
+    emit fileCreated(fileId, QString::fromStdString(path), QFileInfo(path.c_str()).birthTime());
 }
 
 void ThreadManager::removeCreatedFiles()

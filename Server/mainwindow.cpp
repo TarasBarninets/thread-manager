@@ -25,7 +25,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(mStopThreadsTimer, &QTimer::timeout, this, &MainWindow::checkThreadsStops);
     connect(mTcpServer, &TcpServer::requestFile, mThreadManager, &ThreadManager::createRequestedFile);
     connect(mThreadManager, &ThreadManager::fileCreated, this, &MainWindow::handleRequestedCreatedFile);
-    connect(mThreadManager, &ThreadManager::pathAlreadyCreatedFile, this, &MainWindow::handleAlreadyCreatedFile);
     connect(mTcpServer, &TcpServer::requestFromClient, ui->requestHistory, &QTextEdit::append);
 }
 
@@ -115,15 +114,14 @@ void MainWindow::checkThreadsStops()
     qDebug() << "Timer trigered, numRunningThreads = " << numRunningThreads;
 }
 
-void MainWindow::handleRequestedCreatedFile(int fileId, QDateTime time, QString path)
+void MainWindow::handleRequestedCreatedFile(int fileId, QString path, QDateTime dateTime)
 {
-    QString message = time.toString() + " : " + path;
-    ui->generatedFilesHistory->append(message);
-    mTcpServer->informClient(fileId, path);
-}
-
-void MainWindow::handleAlreadyCreatedFile(int fileId, QString path)
-{
+    QDateTime defaultDateTime = QDateTime::fromString("1.30.1", "M.d.s");
+    if(dateTime != defaultDateTime)
+    {
+        QString message = dateTime.toString() + " : " + path;
+        ui->generatedFilesHistory->append(message);
+    }
     mTcpServer->informClient(fileId, path);
 }
 
